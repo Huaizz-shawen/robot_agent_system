@@ -1,0 +1,20 @@
+
+好的，我会帮您从冰箱拿一瓶饮料。让我先观察一下当前环境。
+
+{
+  "task_analysis": {
+    "intent": "retrieve_item_from_fridge",
+    "entities": ["冰箱", "一瓶饮料"],
+    "complexity": "simple",
+    "estimated_duration": "2-3 minutes",
+    "requires_observation": true
+  },
+  "execution_plan": [
+    {
+      "step": 1,
+      "agent": "Unitree-G1 humanoid_robot",
+      "location": "home",
+      "action": "<sense>get_observation()</sense>",
+      action_type": "<sense>get_observation()</sense>"
+      
+}

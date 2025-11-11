@@ -1,0 +1,22 @@
+{
+  "task_analysis": {
+    "intent": "retrieve_item_from_fridge",
+    "entities": [
+      "冰箱",
+      "一瓶饮料"
+    ],
+    "complexity": "simple",
+    "estimated_duration": "2-3 minutes"
+  },
+  "execution_plan": [
+    {
+      "step": 1,
+      "action": "<sense>get_observation()</sense>",
+      "agent": "humanoid_robot",
+      "location": "unknown",
+      "success_criteria": "unknown"
+    }
+  ],
+  "contingency_plans": [],
+  "human_feedback": ""
+}
