@@ -8,23 +8,30 @@ def clean_json_response_enhanced(response_text: str) -> str:
     """
     增强的JSON响应清理函数
     处理各种常见的JSON格式问题
-    
+
     Args:
         response_text: 原始响应文本
-        
+
     Returns:
         清理后的JSON字符串，如果无法提取有效部分则返回空字符串
     """
     # 保存原始文本用于调试
     original = response_text
-    
+
     # --- MODIFIED SECTION 1: 更健壮的JSON内容提取 ---
     # 首先，尝试匹配被Markdown代码块包裹的JSON
     match = re.search(r'```(?:json)?\s*(\{[\s\S]*\})\s*```', response_text, re.MULTILINE)
     if match:
         response_text = match.group(1)
     else:
-        # 如果没有找到Markdown块，则回退到查找第一个 '{' 和最后一个 '}'
+        # 如果没有找到Markdown块，尝试找到 "---" 或类似分隔符后的JSON
+        # 处理类似 "Context: {}\nTask status: first step\n---\n{...}" 的格式
+        if '---' in response_text:
+            parts = response_text.split('---', 1)
+            if len(parts) > 1:
+                response_text = parts[1].strip()
+
+        # 查找第一个 '{' 和最后一个 '}'
         # 这种方法可以处理JSON前后有无关文本的情况
         start_idx = response_text.find('{')
         end_idx = response_text.rfind('}')
@@ -35,7 +42,14 @@ def clean_json_response_enhanced(response_text: str) -> str:
             return "" # 返回空字符串以避免后续处理出错
 
     # 3. 修复常见的JSON格式问题
-    
+
+    # 3.0 修复中文标点符号
+    # 将中文逗号和冒号替换为英文标点
+    response_text = response_text.replace('，', ',')
+    response_text = response_text.replace('：', ':')
+    response_text = response_text.replace('｛', '{')
+    response_text = response_text.replace('｝', '}')
+
     # 3.1 移除行尾的逗号（在 } 或 ] 之前）
     response_text = re.sub(r',\s*([\}\]])', r'\1', response_text)
     
@@ -51,7 +65,12 @@ def clean_json_response_enhanced(response_text: str) -> str:
     
     # 3.3 修复属性名没有引号的问题
     # 匹配形如 key: value 的模式，给key加上引号
+    # First pass: basic property names
     response_text = re.sub(r'([,\{\s])([a-zA-Z_][a-zA-Z0-9_]*)\s*:', r'\1"\2":', response_text)
+
+    # Second pass: fix property names that might have been partially quoted
+    # This handles cases like: rationale: "text" -> "rationale": "text"
+    response_text = re.sub(r'\n\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*:', r'\n  "\1":', response_text)
     
     # --- MODIFIED SECTION 2: 修复单引号问题 (解决了 re.error) ---
     # 移除了会导致 "look-behind requires fixed-width pattern" 错误的正则表达式
@@ -75,6 +94,12 @@ def clean_json_response_enhanced(response_text: str) -> str:
     response_text = re.sub(r'//.*$', '', response_text, flags=re.MULTILINE)
     # 移除 /* */ 风格的注释
     response_text = re.sub(r'/\*.*?\*/', '', response_text, flags=re.DOTALL)
+
+    # 3.7 修复 action 字段中的 XML 标签
+    # 将 "<sense>get_observation()</sense>" 替换为 "get_observation"
+    response_text = re.sub(r'"action"\s*:\s*"<[^>]+>([^<]+)</[^>]+>"', r'"action": "\1"', response_text)
+    # 也处理没有引号的情况
+    response_text = re.sub(r'<(talk|tool|act|sense)>([^<]+)</\1>', r'\2', response_text)
     
     # --- REMOVED SECTION: 移除了危险的空白字符处理 ---
     # 原有的 3.7 节会破坏字符串值内部的空格，已被移除。

@@ -88,7 +88,7 @@ class HumanoidRobotPlannerDeepSeek:
                 self.base_url,
                 headers=self.headers,
                 json=request_data,
-                timeout=60
+                timeout=300
             )
             response.raise_for_status()
             return response.json()

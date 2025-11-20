@@ -1,0 +1,14 @@
+langchain
+openai
+tiktoken
+chromadb
+python-docx
+PyPDF2
+dashscope
+torch
+transformers
+sentence-transformers
+langchain-text-splitters
+langchain-community
+langchain-openai
+langchain-huggingface
