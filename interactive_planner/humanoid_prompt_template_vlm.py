@@ -68,8 +68,7 @@ You are a specialized VLM (Vision-Language Model) planner for a Unitree-G1 human
 
 | Action Type | Action Name | Parameters | Description |
 |-------------|-------------|------------|-------------|
-| **talk** | `talk_with_human` | message | Speak to human user |
-| **talk** | `request_item_from_store` | item | Request item from store robot |
+| **talk** | `speak` | message | Speak/communicate (to human, store robot, or announce) |
 | **tool** | `control_air_conditioner` | action, temperature | Control AC (action: "turn_on"/"turn_off", temp: 16-30°C) |
 | **tool** | `control_light` | action | Control lights (action: "turn_on"/"turn_off") |
 | **tool** | `web_search` | URL, query | Search web for information |
@@ -95,9 +94,20 @@ You are a specialized VLM (Vision-Language Model) planner for a Unitree-G1 human
 ```json
 {
   "next_step": {
-    "action": "talk_with_human",
+    "action": "speak",
     "action_type": "talk",
     "parameters": {"message": "The AC is now on at 22°C"}
+  }
+}
+```
+
+✅ CORRECT (speaking to store):
+```json
+{
+  "next_step": {
+    "action": "speak",
+    "action_type": "talk",
+    "parameters": {"message": "Please get water for me"}
   }
 }
 ```
@@ -122,7 +132,7 @@ You are a specialized VLM (Vision-Language Model) planner for a Unitree-G1 human
 }
 ```
 
-**REMEMBER: Only use the 9 actions listed in the table above. No exceptions.**
+**REMEMBER: Only use the 8 actions listed in the table above. No exceptions.**
 
 ## VISION-BASED PLANNING PROTOCOL (CRITICAL)
 
@@ -285,7 +295,7 @@ Return ONE step in this JSON structure:
     "step_number": 2,
     "agent": "Unitree-G1 humanoid_robot",
     "location": "home",
-    "action": "talk_with_human",
+    "action": "speak",
     "action_type": "talk",
     "parameters": {"message": "I've turned on the AC to 24°C to warm the room."},
     "expected_visual_outcome": "Human may acknowledge (visual gesture) or continue activity",
@@ -313,7 +323,7 @@ Return ONE step in this JSON structure:
   "task_summary": {
     "total_steps_executed": 2,
     "final_visual_state": "AC ON at 24°C, human satisfied",
-    "actions_performed": ["control_air_conditioner", "talk_with_human"],
+    "actions_performed": ["control_air_conditioner", "speak"],
     "success": true
   },
   "needs_human_input": false
@@ -407,7 +417,7 @@ Return ONE step in this JSON structure:
 
 ## Important Reminders
 
-1. **⚠️ ONLY USE THE 9 ALLOWED ACTIONS** - Never invent actions! Use ONLY: talk_with_human, request_item_from_store, control_air_conditioner, control_light, web_search, navigate_to_store, return_home_with_item, wait_for_item, get_observation
+1. **⚠️ ONLY USE THE 8 ALLOWED ACTIONS** - Never invent actions! Use ONLY: speak, control_air_conditioner, control_light, web_search, navigate_to_store, return_home_with_item, wait_for_item, get_observation
 2. **You SEE images directly** - Don't ask for visual descriptions, analyze the image yourself
 3. **Verify with vision** - Compare expected vs actual visual changes after actions
 4. **Minimize human interaction** - Only talk when necessary (clarification, completion, essential communication)
@@ -475,8 +485,7 @@ def validate_vlm_response(response_text):
     """
     # Define allowed actions
     ALLOWED_ACTIONS = {
-        "talk_with_human",
-        "request_item_from_store",
+        "speak",
         "control_air_conditioner",
         "control_light",
         "web_search",

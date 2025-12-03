@@ -150,11 +150,16 @@ class HumanoidExecutor:
     def _execute_talk(self, action: str, params: Dict) -> ExecutionResult:
         """Execute communication actions"""
 
-        if action == "talk_with_human":
-            return self._talk_with_human(params.get("message", ""))
+        if action == "speak":
+            return self._speak(params.get("message", ""))
+
+        # Legacy support for old action names (backward compatibility)
+        elif action == "talk_with_human":
+            return self._speak(params.get("message", ""))
 
         elif action == "request_item_from_store":
-            return self._request_item_from_store(params.get("item", ""))
+            item = params.get("item", "")
+            return self._speak(f"Please get {item} for me")
 
         else:
             return ExecutionResult(
@@ -163,39 +168,35 @@ class HumanoidExecutor:
                 error=f"Action '{action}' not implemented"
             )
 
-    def _talk_with_human(self, message: str) -> ExecutionResult:
-        """Speak to human user"""
+    def _speak(self, message: str) -> ExecutionResult:
+        """Speak/communicate (unified action for all communication)"""
         if self.simulation_mode:
             # Simulation: just display the message
             print(f"🤖 Robot says: \"{message}\"")
-            return ExecutionResult(
-                success=True,
-                feedback=f"Message delivered to human: '{message}'",
-                data={"message": message}
-            )
-        else:
-            # TODO: Real implementation
-            # - Text-to-speech API
-            # - Display on robot screen
-            # self.robot_controller.speak(message)
-            raise NotImplementedError("Real TTS not yet implemented")
 
-    def _request_item_from_store(self, item: str) -> ExecutionResult:
-        """Request item from store robot (inter-robot communication)"""
-        if self.simulation_mode:
-            # Simulation: assume store robot received request
-            print(f"📡 Requesting '{item}' from store robot...")
-            time.sleep(0.5)  # Simulate network delay
-            return ExecutionResult(
-                success=True,
-                feedback=f"Store robot acknowledged request for '{item}'. Preparing item.",
-                data={"requested_item": item, "estimated_time": "30 seconds"}
-            )
+            # Detect if this is a store request based on message content
+            is_store_request = any(keyword in message.lower() for keyword in ['get', 'please', 'request', 'need'])
+
+            if is_store_request:
+                time.sleep(0.5)  # Simulate network delay for store communication
+                return ExecutionResult(
+                    success=True,
+                    feedback=f"Message sent: '{message}'. Store acknowledged.",
+                    data={"message": message, "recipient": "store"}
+                )
+            else:
+                return ExecutionResult(
+                    success=True,
+                    feedback=f"Message delivered: '{message}'",
+                    data={"message": message, "recipient": "human"}
+                )
         else:
             # TODO: Real implementation
-            # - API call to store robot
-            # - Network communication protocol
-            raise NotImplementedError("Inter-robot communication not yet implemented")
+            # - Text-to-speech API for human
+            # - Network API for store robot
+            # - Smart routing based on message content
+            # self.robot_controller.speak(message)
+            raise NotImplementedError("Real TTS/communication not yet implemented")
 
     # ==================== TOOL Actions ====================
 
